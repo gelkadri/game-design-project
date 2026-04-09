@@ -1,12 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HealthManager : MonoBehaviour
+public class SkyHeartManager : MonoBehaviour
 {
-    public static HealthManager instance;
+    public static SkyHeartManager instance;
     public GameObject damageEffect;
 
-    private int MaxHealth = 6;
+    private int maxHealth = 6;
     public int currentHealth;
 
     [SerializeField] private Image[] hearts;
@@ -14,7 +14,7 @@ public class HealthManager : MonoBehaviour
     [SerializeField] private Sprite HalfHeartSprite;
     [SerializeField] private Sprite EmptyHeartSprite;
 
-    private GameObject Player;
+    private GameObject explorer;
 
     private void Awake()
     {
@@ -23,8 +23,8 @@ public class HealthManager : MonoBehaviour
 
     private void Start()
     {
-        Player = GameObject.FindObjectOfType<PlayerController>().gameObject;
-        currentHealth = MaxHealth;
+        explorer = GameObject.FindObjectOfType<SkyExplorerController>().gameObject;
+        currentHealth = maxHealth;
         DisplayHearts();
     }
    
@@ -37,14 +37,14 @@ public class HealthManager : MonoBehaviour
         {
             currentHealth--;
             DisplayHearts();
-            //Player.GetComponent<PlayerController>().Knockback();
+            // explorer.GetComponent<SkyExplorerController>().Knockback();
         }
         else if (currentHealth <= 0)
         {
-            GameManager.instance.Death();
+            SkyRealmGameManager.instance.Death();
         }
         
-        Instantiate(damageEffect, Player.transform.position, Quaternion.identity);
+        Instantiate(damageEffect, explorer.transform.position, Quaternion.identity);
     }
 
     public void DisplayHearts()

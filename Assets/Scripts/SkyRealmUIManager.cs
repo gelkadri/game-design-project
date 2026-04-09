@@ -1,9 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
-public class UIManager : MonoBehaviour
+public class SkyRealmUIManager : MonoBehaviour
 {
-    public static UIManager instance;
+    public static SkyRealmUIManager instance;
     public GameObject mobileControls;
 
     public bool fadeToBlack, fadeFromBlack;
@@ -12,7 +13,8 @@ public class UIManager : MonoBehaviour
 
     //player reference
 
-    public PlayerController playerController;
+    [FormerlySerializedAs("playerController")]
+    public SkyExplorerController skyExplorerController;
 
 
     private void Awake()
@@ -62,7 +64,7 @@ public class UIManager : MonoBehaviour
 
         if (blackScreen.color.a <= 0f)
         {
-            if(playerController.controlmode == Controls.mobile)
+            if (skyExplorerController.travelMode == SkyTravelMode.mobile)
             {
                 EnableMobileControls();
             }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class ExitTrigger : MonoBehaviour
+public class SkyPortalTrigger : MonoBehaviour
 {
     //public Animator anim;
     private void OnTriggerEnter2D(Collider2D collision)
@@ -19,11 +19,11 @@ public class ExitTrigger : MonoBehaviour
         //anim.SetTrigger("Exit");
         yield return new WaitForSeconds(0.1f);
 
-        UIManager.instance.DisableMobileControls();
-        UIManager.instance.fadeToBlack = true;
+        SkyRealmUIManager.instance.DisableMobileControls();
+        SkyRealmUIManager.instance.fadeToBlack = true;
 
         yield return new WaitForSeconds(2f);
 
-        GameManager.instance.LevelComplete();
+        SkyRealmGameManager.instance.LevelComplete();
     }
 }

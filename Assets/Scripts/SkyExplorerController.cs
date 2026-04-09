@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
-public enum Controls { mobile,pc}
+public enum SkyTravelMode { mobile, pc }
 
-public class PlayerController : MonoBehaviour
+public class SkyExplorerController : MonoBehaviour
 {
 
 
@@ -20,9 +21,11 @@ public class PlayerController : MonoBehaviour
     private bool isGroundedBool = false;
     private bool canDoubleJump = false;
 
-    public Animator playeranim;
+    [FormerlySerializedAs("playeranim")]
+    public Animator explorerAnimator;
 
-    public Controls controlmode;
+    [FormerlySerializedAs("controlmode")]
+    public SkyTravelMode travelMode;
    
 
     private float moveX;
@@ -31,8 +34,9 @@ public class PlayerController : MonoBehaviour
     public ParticleSystem footsteps;
     private ParticleSystem.EmissionModule footEmissions;
 
-    public ParticleSystem ImpactEffect;
-    private bool wasonGround;
+    [FormerlySerializedAs("ImpactEffect")]
+    public ParticleSystem cloudLandingEffect;
+    private bool wasOnGround;
 
 
    // public GameObject projectile;
@@ -52,9 +56,9 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         footEmissions = footsteps.emission;
 
-        if (controlmode == Controls.mobile)
+        if (travelMode == SkyTravelMode.mobile)
         {
-            UIManager.instance.EnableMobileControls();
+            SkyRealmUIManager.instance.EnableMobileControls();
         }
 
 
@@ -68,7 +72,7 @@ public class PlayerController : MonoBehaviour
         {
             canDoubleJump = true; // Reset double jump when grounded
 
-            if (controlmode == Controls.pc)
+            if (travelMode == SkyTravelMode.pc)
             {
                 moveX = Input.GetAxis("Horizontal");
             }
@@ -98,7 +102,7 @@ public class PlayerController : MonoBehaviour
             // ... (your existing code for rotation)
 
             // Handle shooting
-            if (controlmode == Controls.pc && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
+            if (travelMode == SkyTravelMode.pc && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
             {
                 Shoot();
                 nextFireTime = Time.time + 1f / fireRate; // Set the next allowed fire time
@@ -113,15 +117,15 @@ public class PlayerController : MonoBehaviour
 
         //impactEffect
 
-        if(!wasonGround && isGroundedBool)
+        if (!wasOnGround && isGroundedBool)
         {
-            ImpactEffect.gameObject.SetActive(true);
-            ImpactEffect.Stop();
-            ImpactEffect.transform.position = new Vector2(footsteps.transform.position.x,footsteps.transform.position.y-0.2f);
-            ImpactEffect.Play();
+            cloudLandingEffect.gameObject.SetActive(true);
+            cloudLandingEffect.Stop();
+            cloudLandingEffect.transform.position = new Vector2(footsteps.transform.position.x, footsteps.transform.position.y - 0.2f);
+            cloudLandingEffect.Play();
         }
 
-        wasonGround = isGroundedBool;
+        wasOnGround = isGroundedBool;
 
         
     }
@@ -129,22 +133,22 @@ public void SetAnimations()
 {
     if (moveX != 0 && isGroundedBool)
     {
-        playeranim.SetBool("isRun", true);
+        explorerAnimator.SetBool("isRun", true);
         footEmissions.rateOverTime = 35f;
     }
     else
     {
-        playeranim.SetBool("isRun", false);
+        explorerAnimator.SetBool("isRun", false);
         footEmissions.rateOverTime = 0f;
     }
 
     if (!isGroundedBool)
     {
-        playeranim.SetBool("isJump", true);
+        explorerAnimator.SetBool("isJump", true);
     }
     else
     {
-        playeranim.SetBool("isJump", false);
+        explorerAnimator.SetBool("isJump", false);
     }
 }
 
@@ -164,7 +168,7 @@ public void SetAnimations()
     private void FixedUpdate()
     {
         // Player movement
-        if (controlmode == Controls.pc)
+        if (travelMode == SkyTravelMode.pc)
         {
             moveX = Input.GetAxis("Horizontal");
         }
@@ -178,7 +182,7 @@ public void SetAnimations()
     {
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0); // Zero out vertical velocity
         rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-        playeranim.SetBool("isJump", true);
+        explorerAnimator.SetBool("isJump", true);
     }
 
     private bool IsGrounded()
@@ -192,7 +196,7 @@ public void SetAnimations()
     {
         if(collision.gameObject.tag == "killzone")
         {
-            GameManager.instance.Death();
+            SkyRealmGameManager.instance.Death();
         }
     }
     

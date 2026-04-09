@@ -3,16 +3,18 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
-public class GameManager : MonoBehaviour
+public class SkyRealmGameManager : MonoBehaviour
 {
-    public static GameManager instance;
+    public static SkyRealmGameManager instance;
 
 
     [SerializeField] private TMP_Text coinText;
     [SerializeField] private TMP_Text timerText;
 
-    [SerializeField] private PlayerController playerController;
+    [FormerlySerializedAs("playerController")]
+    [SerializeField] private SkyExplorerController skyExplorerController;
 
     private int coinCount = 0;
     private int gemCount = 0;
@@ -66,8 +68,8 @@ public class GameManager : MonoBehaviour
         }
 
         UpdateGUI();
-        UIManager.instance.fadeFromBlack = true;
-        playerPosition = playerController.transform.position;
+        SkyRealmUIManager.instance.fadeFromBlack = true;
+        playerPosition = skyExplorerController.transform.position;
 
         FindTotalPickups();
     }
@@ -291,21 +293,21 @@ public class GameManager : MonoBehaviour
         if (isGameOver) return;
         isGameOver = true;
 
-        UIManager.instance.DisableMobileControls();
-        playerController.gameObject.SetActive(false);
+        SkyRealmUIManager.instance.DisableMobileControls();
+        skyExplorerController.gameObject.SetActive(false);
 
         StartCoroutine(ShowGameOver());
     }
 
     private IEnumerator ShowGameOver()
     {
-        UIManager.instance.fadeToBlack = true;
+        SkyRealmUIManager.instance.fadeToBlack = true;
         yield return new WaitForSeconds(1.5f);
 
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
 
-        UIManager.instance.fadeFromBlack = true;
+        SkyRealmUIManager.instance.fadeFromBlack = true;
     }
 
     public void Death()
@@ -313,12 +315,12 @@ public class GameManager : MonoBehaviour
         if (!isGameOver)
         {
             // Disable Mobile Controls
-            UIManager.instance.DisableMobileControls();
+            SkyRealmUIManager.instance.DisableMobileControls();
             // Initiate screen fade
-            UIManager.instance.fadeToBlack = true;
+            SkyRealmUIManager.instance.fadeToBlack = true;
 
             // Disable the player object
-            playerController.gameObject.SetActive(false);
+            skyExplorerController.gameObject.SetActive(false);
 
             // Start death coroutine to wait and then respawn the player
             StartCoroutine(DeathCoroutine());
@@ -334,11 +336,11 @@ public class GameManager : MonoBehaviour
     public void FindTotalPickups()
     {
 
-        pickup[] pickups = GameObject.FindObjectsOfType<pickup>();
+        SkyCollectible[] collectibles = GameObject.FindObjectsOfType<SkyCollectible>();
 
-        foreach (pickup pickupObject in pickups)
+        foreach (SkyCollectible collectible in collectibles)
         {
-            if (pickupObject.pt == pickup.pickupType.coin)
+            if (collectible.collectibleKind == SkyCollectible.CollectibleKind.coin)
             {
                 totalCoins += 1;
             }
@@ -361,13 +363,13 @@ public class GameManager : MonoBehaviour
         levelCompleteCoins.text = "COINS COLLECTED: " + coinCount.ToString() + " / " + totalCoins.ToString();
         levelCompleteTime.text = "TIME: " + string.Format("{0:00}:{1:00}", minutes, seconds) + " / " + string.Format("{0:00}:{1:00}", Mathf.FloorToInt(levelTime / 60f), Mathf.FloorToInt(levelTime % 60f));
 
-        UIManager.instance.fadeFromBlack = true;
+        SkyRealmUIManager.instance.fadeFromBlack = true;
     }
    
     public IEnumerator DeathCoroutine()
     {
         yield return new WaitForSeconds(1f);
-        playerController.transform.position = playerPosition;
+        skyExplorerController.transform.position = playerPosition;
 
         // Wait for 2 seconds
         yield return new WaitForSeconds(1f);
