@@ -16,7 +16,8 @@ public class SkyPortalTrigger : MonoBehaviour
 
     IEnumerator LevelExit()
     {
-        //anim.SetTrigger("Exit");
+        SkyRealmGameManager.instance.SetLevelExiting();
+
         yield return new WaitForSeconds(0.1f);
 
         SkyRealmUIManager.instance.DisableMobileControls();

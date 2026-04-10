@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,6 +8,7 @@ public class SkyHeartManager : MonoBehaviour
     public GameObject damageEffect;
 
     private int maxHealth = 6;
+    private int startingHealth = 4;
     public int currentHealth;
 
     [SerializeField] private Image[] hearts;
@@ -23,12 +25,57 @@ public class SkyHeartManager : MonoBehaviour
 
     private void Start()
     {
-        explorer = GameObject.FindObjectOfType<SkyExplorerController>().gameObject;
-        currentHealth = maxHealth;
+        SkyExplorerController ctrl = GameObject.FindObjectOfType<SkyExplorerController>();
+        if (ctrl != null)
+            explorer = ctrl.gameObject;
+
+        if (hearts == null || hearts.Length == 0)
+            FindHeartImages();
+
+        currentHealth = startingHealth;
         DisplayHearts();
+    }
+
+    private void FindHeartImages()
+    {
+        string[] heartNames = { "Heart", "Heart (1)", "Heart (2)" };
+        List<Image> found = new List<Image>();
+        Canvas canvas = GameObject.FindObjectOfType<Canvas>();
+        if (canvas == null) return;
+
+        Image[] allImages = canvas.GetComponentsInChildren<Image>(true);
+        foreach (string hName in heartNames)
+        {
+            foreach (Image img in allImages)
+            {
+                if (img.gameObject.name == hName)
+                {
+                    found.Add(img);
+                    if (FullHeartSprite == null)
+                        FullHeartSprite = img.sprite;
+                    break;
+                }
+            }
+        }
+
+        found.Sort((a, b) =>
+            a.rectTransform.anchoredPosition.x.CompareTo(b.rectTransform.anchoredPosition.x));
+
+        hearts = found.ToArray();
     }
    
   
+
+    public void HealPlayer()
+    {
+        if (currentHealth < maxHealth)
+        {
+            currentHealth += 2;
+            if (currentHealth > maxHealth)
+                currentHealth = maxHealth;
+            DisplayHearts();
+        }
+    }
 
     public void HurtPlayer()
     {
@@ -49,25 +96,28 @@ public class SkyHeartManager : MonoBehaviour
 
     public void DisplayHearts()
     {
-        int fullHeartsCount = currentHealth / 2; // Calculate the number of full hearts
-        bool hasHalfHeart = (currentHealth % 2) == 1; // Check if there's a half heart needed
+        int fullHeartsCount = currentHealth / 2;
+        bool hasHalfHeart = (currentHealth % 2) == 1;
 
         for (int i = 0; i < hearts.Length; i++)
         {
             if (i < fullHeartsCount)
             {
-                // Heart should be full
-                hearts[i].sprite = FullHeartSprite;
+                if (FullHeartSprite != null) hearts[i].sprite = FullHeartSprite;
+                hearts[i].color = Color.white;
             }
             else if (hasHalfHeart && i == fullHeartsCount)
             {
-                // Heart should be half
-                hearts[i].sprite = HalfHeartSprite;
+                if (HalfHeartSprite != null)
+                    hearts[i].sprite = HalfHeartSprite;
+                hearts[i].color = new Color(1f, 1f, 1f, 0.4f);
             }
             else
             {
-                // Heart should be empty
-                hearts[i].sprite = EmptyHeartSprite;
+                if (EmptyHeartSprite != null)
+                    hearts[i].sprite = EmptyHeartSprite;
+                else
+                    hearts[i].color = new Color(1f, 1f, 1f, 0.15f);
             }
         }
     }
