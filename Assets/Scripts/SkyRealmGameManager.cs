@@ -20,6 +20,7 @@ public class SkyRealmGameManager : MonoBehaviour
     private int gemCount = 0;
     private bool isGameOver = false;
     private bool levelComplete = false;
+    private bool levelExiting = false;
     private Vector3 playerPosition;
 
     //Level Complete
@@ -50,6 +51,11 @@ public class SkyRealmGameManager : MonoBehaviour
 
     private void Start()
     {
+        levelTime = 20f;
+
+        if (SkyHeartManager.instance == null)
+            gameObject.AddComponent<SkyHeartManager>();
+
         if (timerText == null)
         {
             CreateTimerUI();
@@ -235,6 +241,10 @@ public class SkyRealmGameManager : MonoBehaviour
     public void IncrementCoinCount()
     {
         coinCount++;
+
+        if (coinCount % 3 == 0 && SkyHeartManager.instance != null)
+            SkyHeartManager.instance.HealPlayer();
+
         UpdateGUI();
     }
     public void IncrementGemCount()
@@ -288,9 +298,14 @@ public class SkyRealmGameManager : MonoBehaviour
         coinText.text = coinCount.ToString();
     }
 
+    public void SetLevelExiting()
+    {
+        levelExiting = true;
+    }
+
     private void TimeUp()
     {
-        if (isGameOver) return;
+        if (isGameOver || levelComplete || levelExiting) return;
         isGameOver = true;
 
         SkyRealmUIManager.instance.DisableMobileControls();
