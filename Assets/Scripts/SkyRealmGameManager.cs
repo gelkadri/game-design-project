@@ -56,6 +56,10 @@ public class SkyRealmGameManager : MonoBehaviour
         if (SkyHeartManager.instance == null)
             gameObject.AddComponent<SkyHeartManager>();
 
+        Canvas canvas = coinText != null ? coinText.GetComponentInParent<Canvas>() : FindObjectOfType<Canvas>();
+        if (canvas != null && canvas.GetComponent<SkyRealmPauseMenu>() == null)
+            canvas.gameObject.AddComponent<SkyRealmPauseMenu>();
+
         if (timerText == null)
         {
             CreateTimerUI();

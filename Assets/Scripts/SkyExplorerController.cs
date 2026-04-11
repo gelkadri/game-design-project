@@ -66,6 +66,9 @@ public class SkyExplorerController : MonoBehaviour
 
     private void Update()
     {
+        if (isPaused)
+            return;
+
         isGroundedBool = IsGrounded();
 
         if (isGroundedBool)
@@ -167,6 +170,9 @@ public void SetAnimations()
     }
     private void FixedUpdate()
     {
+        if (isPaused)
+            return;
+
         // Player movement
         if (travelMode == SkyTravelMode.pc)
         {
@@ -226,10 +232,14 @@ public void SetAnimations()
     //mobile;
     public void MobileMove(float value)
     {
+        if (isPaused)
+            return;
         moveX = value;
     }
     public void MobileJump()
     {
+        if (isPaused)
+            return;
         if (isGroundedBool)
         {
             // Perform initial jump
@@ -254,6 +264,8 @@ public void SetAnimations()
 
     public void MobileShoot()
     {
+        if (isPaused)
+            return;
         if (Time.time >= nextFireTime)
         {
             Shoot();
