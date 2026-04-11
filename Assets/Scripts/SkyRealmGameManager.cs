@@ -135,13 +135,13 @@ public class SkyRealmGameManager : MonoBehaviour
         msgRt.anchoredPosition = new Vector2(0, 10);
         msgRt.sizeDelta = new Vector2(600, 50);
 
-        // Retry button
         CreateGameOverButton("RetryButton", "RETRY", new Vector2(-100, -60), () => {
-            SceneManager.LoadScene(1);
+            SkyHeartManager.ResetHealth();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         });
 
-        // Menu button
         CreateGameOverButton("MenuButton", "MENU", new Vector2(100, -60), () => {
+            SkyHeartManager.ResetHealth();
             SceneManager.LoadScene(0);
         });
 
@@ -310,11 +310,23 @@ public class SkyRealmGameManager : MonoBehaviour
     private void TimeUp()
     {
         if (isGameOver || levelComplete || levelExiting) return;
-        isGameOver = true;
 
         SkyRealmUIManager.instance.DisableMobileControls();
+        SkyRealmUIManager.instance.fadeToBlack = true;
         skyExplorerController.gameObject.SetActive(false);
 
+        if (SkyHeartManager.instance != null)
+        {
+            SkyHeartManager.instance.LoseHeart();
+
+            if (SkyHeartManager.instance.IsAlive())
+            {
+                StartCoroutine(RestartLevel());
+                return;
+            }
+        }
+
+        isGameOver = true;
         StartCoroutine(ShowGameOver());
     }
 
@@ -331,25 +343,25 @@ public class SkyRealmGameManager : MonoBehaviour
 
     public void Death()
     {
-        if (!isGameOver)
+        if (isGameOver || levelComplete || levelExiting) return;
+
+        SkyRealmUIManager.instance.DisableMobileControls();
+        SkyRealmUIManager.instance.fadeToBlack = true;
+        skyExplorerController.gameObject.SetActive(false);
+
+        if (SkyHeartManager.instance != null)
         {
-            // Disable Mobile Controls
-            SkyRealmUIManager.instance.DisableMobileControls();
-            // Initiate screen fade
-            SkyRealmUIManager.instance.fadeToBlack = true;
+            SkyHeartManager.instance.LoseHeart();
 
-            // Disable the player object
-            skyExplorerController.gameObject.SetActive(false);
-
-            // Start death coroutine to wait and then respawn the player
-            StartCoroutine(DeathCoroutine());
-
-            // Update game state
-            isGameOver = true;
-
-            // Log death message
-            Debug.Log("Died");
+            if (SkyHeartManager.instance.IsAlive())
+            {
+                StartCoroutine(RestartLevel());
+                return;
+            }
         }
+
+        isGameOver = true;
+        StartCoroutine(ShowGameOver());
     }
  
     public void FindTotalPickups()
@@ -372,6 +384,7 @@ public class SkyRealmGameManager : MonoBehaviour
     public void LevelComplete()
     {
         levelComplete = true;
+        SkyHeartManager.ResetHealth();
 
         float timeTaken = levelTime - remainingTime;
         int minutes = Mathf.FloorToInt(timeTaken / 60f);
@@ -385,21 +398,10 @@ public class SkyRealmGameManager : MonoBehaviour
         SkyRealmUIManager.instance.fadeFromBlack = true;
     }
    
-    public IEnumerator DeathCoroutine()
+    private IEnumerator RestartLevel()
     {
-        yield return new WaitForSeconds(1f);
-        skyExplorerController.transform.position = playerPosition;
-
-        // Wait for 2 seconds
-        yield return new WaitForSeconds(1f);
-
-        // Check if the game is still over (in case player respawns earlier)
-        if (isGameOver)
-        {
-            SceneManager.LoadScene(1);
-
-            
-        }
+        yield return new WaitForSeconds(1.5f);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
 }

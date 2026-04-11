@@ -8,7 +8,8 @@ public class SkyHeartManager : MonoBehaviour
     public GameObject damageEffect;
 
     private int maxHealth = 6;
-    private int startingHealth = 4;
+    private int startingHealth = 6;
+    private static int savedHealth = -1;
     public int currentHealth;
 
     [SerializeField] private Image[] hearts;
@@ -32,7 +33,7 @@ public class SkyHeartManager : MonoBehaviour
         if (hearts == null || hearts.Length == 0)
             FindHeartImages();
 
-        currentHealth = startingHealth;
+        currentHealth = savedHealth > 0 ? savedHealth : startingHealth;
         DisplayHearts();
     }
 
@@ -65,6 +66,25 @@ public class SkyHeartManager : MonoBehaviour
     }
    
   
+
+    public void LoseHeart()
+    {
+        currentHealth -= 2;
+        if (currentHealth < 0)
+            currentHealth = 0;
+        savedHealth = currentHealth;
+        DisplayHearts();
+    }
+
+    public bool IsAlive()
+    {
+        return currentHealth > 0;
+    }
+
+    public static void ResetHealth()
+    {
+        savedHealth = -1;
+    }
 
     public void HealPlayer()
     {
