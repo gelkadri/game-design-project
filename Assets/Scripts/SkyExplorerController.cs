@@ -46,11 +46,6 @@ public class SkyExplorerController : MonoBehaviour
     private float nextFireTime = 0f; // Time of the next allowed shot
 
 
-    
-
-
-
-
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -101,8 +96,6 @@ public class SkyExplorerController : MonoBehaviour
             Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector3 lookDirection = mousePosition - transform.position;
             float angle = Mathf.Atan2(lookDirection.y, lookDirection.x) * Mathf.Rad2Deg;
-
-            // ... (your existing code for rotation)
 
             // Handle shooting
             if (travelMode == SkyTravelMode.pc && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
@@ -206,27 +199,6 @@ public void SetAnimations()
         }
     }
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     //mobile;
