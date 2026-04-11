@@ -17,17 +17,4 @@ Platformer Mechanics: Jumping, double-jumping, and grounded movement are all set
 
 Sky Collectibles: Coins and sky crystals to make gameplay feel fun.
 
-## Getting Started:
-Clone the repository.
-Open the project in Unity (compatible with Unity 20xx.xx).
-Explore the sample scenes and adapt them to fit your game concept.
-Customize player sprites, tilesets, and level design to create your unique platformer experience.
-Documentation:
-Refer to the Wiki for detailed documentation and guidelines on using the template, implementing new features, and optimizing your game.
-
-## Contributions:
-Contributions are welcome! Whether you want to fix bugs, improve existing features, or add new functionality, feel free to fork the repository and submit pull requests.
-
-## License:
-This project is licensed under the MIT License - see the LICENSE file for details.
 
