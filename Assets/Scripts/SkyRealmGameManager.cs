@@ -310,6 +310,7 @@ public class SkyRealmGameManager : MonoBehaviour
     private void TimeUp()
     {
         if (isGameOver || levelComplete || levelExiting) return;
+        isGameOver = true;
 
         SkyRealmUIManager.instance.DisableMobileControls();
         SkyRealmUIManager.instance.fadeToBlack = true;
@@ -326,7 +327,6 @@ public class SkyRealmGameManager : MonoBehaviour
             }
         }
 
-        isGameOver = true;
         StartCoroutine(ShowGameOver());
     }
 
@@ -344,6 +344,7 @@ public class SkyRealmGameManager : MonoBehaviour
     public void Death()
     {
         if (isGameOver || levelComplete || levelExiting) return;
+        isGameOver = true;
 
         SkyRealmUIManager.instance.DisableMobileControls();
         SkyRealmUIManager.instance.fadeToBlack = true;
@@ -360,7 +361,6 @@ public class SkyRealmGameManager : MonoBehaviour
             }
         }
 
-        isGameOver = true;
         StartCoroutine(ShowGameOver());
     }
  
