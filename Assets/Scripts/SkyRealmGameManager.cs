@@ -46,7 +46,7 @@ public class SkyRealmGameManager : MonoBehaviour
     [SerializeField] private AudioClip rewardSound;
     [SerializeField] private AudioClip gameOverSound;
     [SerializeField] private AudioClip levelCompleteSound;
-    [SerializeField] private float backgroundMusicVolume = 0.5f;
+    [SerializeField] private float backgroundMusicVolume = 1f;
     [SerializeField] private float jumpSoundVolume = 1f;
     [SerializeField] private float rewardSoundVolume = 1f;
     [SerializeField] private float gameOverSoundVolume = 1f;
@@ -107,6 +107,8 @@ public class SkyRealmGameManager : MonoBehaviour
         musicAudioSource = gameObject.AddComponent<AudioSource>();
         musicAudioSource.loop = true;
         musicAudioSource.playOnAwake = false;
+        musicAudioSource.spatialBlend = 0f;
+        musicAudioSource.ignoreListenerPause = true;
         musicAudioSource.volume = backgroundMusicVolume;
 
         sfxAudioSource = gameObject.AddComponent<AudioSource>();
@@ -133,7 +135,8 @@ public class SkyRealmGameManager : MonoBehaviour
         if (musicAudioSource == null || backgroundMusic == null) return;
         musicAudioSource.clip = backgroundMusic;
         musicAudioSource.volume = backgroundMusicVolume;
-        musicAudioSource.Play();
+        if (!musicAudioSource.isPlaying)
+            musicAudioSource.Play();
     }
 
     public void PlayJumpSound()
@@ -341,6 +344,11 @@ public class SkyRealmGameManager : MonoBehaviour
 
     private void Update()
     {
+        if (!isGameOver && !levelComplete && !levelExiting)
+        {
+            PlayBackgroundMusic();
+        }
+
         if (!isGameOver && !levelComplete)
         {
             remainingTime -= Time.deltaTime;

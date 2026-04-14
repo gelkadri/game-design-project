@@ -26,6 +26,7 @@ public class SkyCollectible : MonoBehaviour
             if (collision.gameObject.tag == "Player")
             {
                 SkyRealmGameManager.instance.IncrementCoinCount();
+                SkyRealmGameManager.instance.PlayRewardSound();
            
                 Instantiate(pickupEffect, transform.position, Quaternion.identity);
 
