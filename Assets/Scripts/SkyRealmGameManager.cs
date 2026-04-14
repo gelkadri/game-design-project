@@ -43,10 +43,14 @@ public class SkyRealmGameManager : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioClip backgroundMusic;
     [SerializeField] private AudioClip jumpSound;
+    [SerializeField] private AudioClip rewardSound;
     [SerializeField] private AudioClip gameOverSound;
+    [SerializeField] private AudioClip levelCompleteSound;
     [SerializeField] private float backgroundMusicVolume = 0.5f;
     [SerializeField] private float jumpSoundVolume = 1f;
+    [SerializeField] private float rewardSoundVolume = 1f;
     [SerializeField] private float gameOverSoundVolume = 1f;
+    [SerializeField] private float levelCompleteSoundVolume = 1f;
 
     private AudioSource musicAudioSource;
     private AudioSource sfxAudioSource;
@@ -116,8 +120,12 @@ public class SkyRealmGameManager : MonoBehaviour
             backgroundMusic = Resources.Load<AudioClip>("Audio/background");
         if (jumpSound == null)
             jumpSound = Resources.Load<AudioClip>("Audio/jump");
+        if (rewardSound == null)
+            rewardSound = Resources.Load<AudioClip>("Audio/reward");
         if (gameOverSound == null)
             gameOverSound = Resources.Load<AudioClip>("Audio/gameover");
+        if (levelCompleteSound == null)
+            levelCompleteSound = Resources.Load<AudioClip>("Audio/levelcomplete");
     }
 
     private void PlayBackgroundMusic()
@@ -132,6 +140,18 @@ public class SkyRealmGameManager : MonoBehaviour
     {
         if (sfxAudioSource == null || jumpSound == null) return;
         sfxAudioSource.PlayOneShot(jumpSound, jumpSoundVolume);
+    }
+
+    public void PlayRewardSound()
+    {
+        if (sfxAudioSource == null || rewardSound == null) return;
+        sfxAudioSource.PlayOneShot(rewardSound, rewardSoundVolume);
+    }
+
+    private void PlayLevelCompleteSound()
+    {
+        if (sfxAudioSource == null || levelCompleteSound == null) return;
+        sfxAudioSource.PlayOneShot(levelCompleteSound, levelCompleteSoundVolume);
     }
 
     private void HandleGameOverAudio()
@@ -316,6 +336,7 @@ public class SkyRealmGameManager : MonoBehaviour
     public void IncrementGemCount()
     {
         gemCount++;
+        PlayRewardSound();
         UpdateGUI();
     }
 
@@ -450,6 +471,7 @@ public class SkyRealmGameManager : MonoBehaviour
         levelComplete = true;
         if (musicAudioSource != null && musicAudioSource.isPlaying)
             musicAudioSource.Stop();
+        PlayLevelCompleteSound();
         SkyHeartManager.ResetHealth();
 
         float timeTaken = levelTime - remainingTime;
