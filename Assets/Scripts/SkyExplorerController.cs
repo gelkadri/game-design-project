@@ -182,6 +182,10 @@ public void SetAnimations()
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0); // Zero out vertical velocity
         rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         explorerAnimator.SetBool("isJump", true);
+        if (SkyRealmGameManager.instance != null)
+        {
+            SkyRealmGameManager.instance.PlayJumpSound();
+        }
     }
 
     private bool IsGrounded()

@@ -26,6 +26,7 @@ public class SkyCollectible : MonoBehaviour
             if (collision.gameObject.tag == "Player")
             {
                 SkyRealmGameManager.instance.IncrementCoinCount();
+                SkyRealmGameManager.instance.PlayRewardSound();
            
                 Instantiate(pickupEffect, transform.position, Quaternion.identity);
 
@@ -35,11 +36,12 @@ public class SkyCollectible : MonoBehaviour
             
         }
 
-        if (collectibleKind == CollectibleKind.gem)
+        if (collectibleKind == CollectibleKind.gem || collectibleKind == CollectibleKind.skyCrystal)
         {
             if (collision.gameObject.tag == "Player")
             {
                 SkyRealmGameManager.instance.IncrementGemCount();
+                SkyRealmGameManager.instance.PlayRewardSound();
             
                 Instantiate(pickupEffect, transform.position, Quaternion.identity);
 

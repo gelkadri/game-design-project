@@ -39,7 +39,22 @@ public class SkyRealmGameManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     private TMP_Text gameOverTitle;
     private TMP_Text gameOverMessage;
-  
+
+    [Header("Audio")]
+    [SerializeField] private AudioClip backgroundMusic;
+    [SerializeField] private AudioClip jumpSound;
+    [SerializeField] private AudioClip rewardSound;
+    [SerializeField] private AudioClip gameOverSound;
+    [SerializeField] private AudioClip levelCompleteSound;
+    [SerializeField] private float backgroundMusicVolume = 1f;
+    [SerializeField] private float jumpSoundVolume = 1f;
+    [SerializeField] private float rewardSoundVolume = 1f;
+    [SerializeField] private float gameOverSoundVolume = 1f;
+    [SerializeField] private float levelCompleteSoundVolume = 1f;
+
+    private AudioSource musicAudioSource;
+    private AudioSource sfxAudioSource;
+    private bool hasPlayedGameOverSound;
 
 
 
@@ -52,6 +67,9 @@ public class SkyRealmGameManager : MonoBehaviour
     private void Start()
     {
         levelTime = 20f;
+        SetupAudioSources();
+        TryLoadAudioFromResources();
+        PlayBackgroundMusic();
 
         if (SkyHeartManager.instance == null)
             gameObject.AddComponent<SkyHeartManager>();
@@ -82,6 +100,73 @@ public class SkyRealmGameManager : MonoBehaviour
         playerPosition = skyExplorerController.transform.position;
 
         FindTotalPickups();
+    }
+
+    private void SetupAudioSources()
+    {
+        musicAudioSource = gameObject.AddComponent<AudioSource>();
+        musicAudioSource.loop = true;
+        musicAudioSource.playOnAwake = false;
+        musicAudioSource.spatialBlend = 0f;
+        musicAudioSource.ignoreListenerPause = true;
+        musicAudioSource.volume = backgroundMusicVolume;
+
+        sfxAudioSource = gameObject.AddComponent<AudioSource>();
+        sfxAudioSource.loop = false;
+        sfxAudioSource.playOnAwake = false;
+    }
+
+    private void TryLoadAudioFromResources()
+    {
+        if (backgroundMusic == null)
+            backgroundMusic = Resources.Load<AudioClip>("Audio/background");
+        if (jumpSound == null)
+            jumpSound = Resources.Load<AudioClip>("Audio/jump");
+        if (rewardSound == null)
+            rewardSound = Resources.Load<AudioClip>("Audio/reward");
+        if (gameOverSound == null)
+            gameOverSound = Resources.Load<AudioClip>("Audio/gameover");
+        if (levelCompleteSound == null)
+            levelCompleteSound = Resources.Load<AudioClip>("Audio/levelcomplete");
+    }
+
+    private void PlayBackgroundMusic()
+    {
+        if (musicAudioSource == null || backgroundMusic == null) return;
+        musicAudioSource.clip = backgroundMusic;
+        musicAudioSource.volume = backgroundMusicVolume;
+        if (!musicAudioSource.isPlaying)
+            musicAudioSource.Play();
+    }
+
+    public void PlayJumpSound()
+    {
+        if (sfxAudioSource == null || jumpSound == null) return;
+        sfxAudioSource.PlayOneShot(jumpSound, jumpSoundVolume);
+    }
+
+    public void PlayRewardSound()
+    {
+        if (sfxAudioSource == null || rewardSound == null) return;
+        sfxAudioSource.PlayOneShot(rewardSound, rewardSoundVolume);
+    }
+
+    private void PlayLevelCompleteSound()
+    {
+        if (sfxAudioSource == null || levelCompleteSound == null) return;
+        sfxAudioSource.PlayOneShot(levelCompleteSound, levelCompleteSoundVolume);
+    }
+
+    private void HandleGameOverAudio()
+    {
+        if (musicAudioSource != null && musicAudioSource.isPlaying)
+            musicAudioSource.Stop();
+
+        if (!hasPlayedGameOverSound && sfxAudioSource != null && gameOverSound != null)
+        {
+            sfxAudioSource.PlayOneShot(gameOverSound, gameOverSoundVolume);
+            hasPlayedGameOverSound = true;
+        }
     }
 
     private void CreateGameOverPanel()
@@ -259,6 +344,11 @@ public class SkyRealmGameManager : MonoBehaviour
 
     private void Update()
     {
+        if (!isGameOver && !levelComplete && !levelExiting)
+        {
+            PlayBackgroundMusic();
+        }
+
         if (!isGameOver && !levelComplete)
         {
             remainingTime -= Time.deltaTime;
@@ -311,6 +401,7 @@ public class SkyRealmGameManager : MonoBehaviour
     {
         if (isGameOver || levelComplete || levelExiting) return;
         isGameOver = true;
+        HandleGameOverAudio();
 
         SkyRealmUIManager.instance.DisableMobileControls();
         SkyRealmUIManager.instance.fadeToBlack = true;
@@ -345,6 +436,7 @@ public class SkyRealmGameManager : MonoBehaviour
     {
         if (isGameOver || levelComplete || levelExiting) return;
         isGameOver = true;
+        HandleGameOverAudio();
 
         SkyRealmUIManager.instance.DisableMobileControls();
         SkyRealmUIManager.instance.fadeToBlack = true;
@@ -384,6 +476,9 @@ public class SkyRealmGameManager : MonoBehaviour
     public void LevelComplete()
     {
         levelComplete = true;
+        if (musicAudioSource != null && musicAudioSource.isPlaying)
+            musicAudioSource.Stop();
+        PlayLevelCompleteSound();
         SkyHeartManager.ResetHealth();
 
         float timeTaken = levelTime - remainingTime;
