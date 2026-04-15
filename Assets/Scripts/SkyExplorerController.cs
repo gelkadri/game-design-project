@@ -32,7 +32,6 @@ public class SkyExplorerController : MonoBehaviour
     public bool isPaused = false;
 
     public ParticleSystem footsteps;
-    private ParticleSystem.EmissionModule footEmissions;
 
     [FormerlySerializedAs("ImpactEffect")]
     public ParticleSystem cloudLandingEffect;
@@ -49,7 +48,6 @@ public class SkyExplorerController : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        footEmissions = footsteps.emission;
 
         if (travelMode == SkyTravelMode.mobile)
         {
@@ -113,7 +111,7 @@ public class SkyExplorerController : MonoBehaviour
 
         //impactEffect
 
-        if (!wasOnGround && isGroundedBool)
+        if (!wasOnGround && isGroundedBool && cloudLandingEffect != null && footsteps != null)
         {
             cloudLandingEffect.gameObject.SetActive(true);
             cloudLandingEffect.Stop();
@@ -127,25 +125,18 @@ public class SkyExplorerController : MonoBehaviour
     }
 public void SetAnimations()
 {
-    if (moveX != 0 && isGroundedBool)
+    bool running = moveX != 0 && isGroundedBool;
+
+    if (explorerAnimator != null)
     {
-        explorerAnimator.SetBool("isRun", true);
-        footEmissions.rateOverTime = 35f;
-    }
-    else
-    {
-        explorerAnimator.SetBool("isRun", false);
-        footEmissions.rateOverTime = 0f;
+        explorerAnimator.SetBool("isRun", running);
+        explorerAnimator.SetBool("isJump", !isGroundedBool);
     }
 
-    if (!isGroundedBool)
-    {
-        explorerAnimator.SetBool("isJump", true);
-    }
-    else
-    {
-        explorerAnimator.SetBool("isJump", false);
-    }
+    // Unity 6: do not use ParticleSystem.EmissionModule (rateOverTime) from script — it throws at runtime.
+    // Toggle the footstep object instead; set emission rate once in the ParticleSystem prefab / Inspector.
+    if (footsteps != null && footsteps.gameObject.activeSelf != running)
+        footsteps.gameObject.SetActive(running);
 }
 
     private void FlipSprite(float direction)

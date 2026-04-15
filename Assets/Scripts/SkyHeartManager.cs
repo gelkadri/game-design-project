@@ -116,11 +116,17 @@ public class SkyHeartManager : MonoBehaviour
 
     public void DisplayHearts()
     {
+        if (hearts == null || hearts.Length == 0)
+            return;
+
         int fullHeartsCount = currentHealth / 2;
         bool hasHalfHeart = (currentHealth % 2) == 1;
 
         for (int i = 0; i < hearts.Length; i++)
         {
+            if (hearts[i] == null)
+                continue;
+
             if (i < fullHeartsCount)
             {
                 if (FullHeartSprite != null) hearts[i].sprite = FullHeartSprite;

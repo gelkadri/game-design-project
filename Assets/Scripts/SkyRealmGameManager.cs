@@ -307,6 +307,9 @@ public class SkyRealmGameManager : MonoBehaviour
         levelExiting = true;
     }
 
+    /// <summary>Hazards like falling asteroids should only run while the level is actively playable.</summary>
+    public bool IsLevelPlayable => !isGameOver && !levelComplete && !levelExiting;
+
     private void TimeUp()
     {
         if (isGameOver || levelComplete || levelExiting) return;
