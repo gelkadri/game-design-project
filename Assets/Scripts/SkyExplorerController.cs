@@ -18,6 +18,7 @@ public class SkyExplorerController : MonoBehaviour
     public Transform groundCheck;
 
     private Rigidbody2D rb;
+    private SpriteRenderer spriteRenderer;
     private bool isGroundedBool = false;
     private bool canDoubleJump = false;
 
@@ -48,6 +49,9 @@ public class SkyExplorerController : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>(true);
 
         if (travelMode == SkyTravelMode.mobile)
         {
@@ -141,16 +145,18 @@ public void SetAnimations()
 
     private void FlipSprite(float direction)
     {
-        if (direction > 0)
+        // Do not scale the root transform — that breaks SetParent(worldPositionStays)
+        // on moving platforms with non-uniform scale (player looks stretched).
+        if (spriteRenderer != null)
         {
-            // Moving right, flip sprite to the right
-            transform.localScale = new Vector3(1, 1, 1);
+            spriteRenderer.flipX = direction < 0f;
+            return;
         }
-        else if (direction < 0)
-        {
-            // Moving left, flip sprite to the left
-            transform.localScale = new Vector3(-1, 1, 1);
-        }
+
+        if (direction > 0f)
+            transform.localScale = new Vector3(1f, 1f, 1f);
+        else if (direction < 0f)
+            transform.localScale = new Vector3(-1f, 1f, 1f);
     }
     private void FixedUpdate()
     {
