@@ -489,11 +489,194 @@ public class SkyRealmGameManager : MonoBehaviour
         int seconds = Mathf.FloorToInt(timeTaken % 60f);
 
         levelCompletePanel.SetActive(true);
-        leveCompletePanelTitle.text = "LEVEL COMPLETE";
-        levelCompleteCoins.text = "COINS COLLECTED: " + coinCount.ToString() + " / " + totalCoins.ToString();
-        levelCompleteTime.text = "TIME: " + string.Format("{0:00}:{1:00}", minutes, seconds) + " / " + string.Format("{0:00}:{1:00}", Mathf.FloorToInt(levelTime / 60f), Mathf.FloorToInt(levelTime % 60f));
+        // Build order: 0 Menu, 1 Level, 2 Level 2
+        int sceneIndex = SceneManager.GetActiveScene().buildIndex;
+        if (sceneIndex == 1)
+            leveCompletePanelTitle.text = "LEVEL COMPLETE\n<size=40>Beginning the next level...</size>";
+        else if (sceneIndex == 2)
+        {
+            leveCompletePanelTitle.text = "GAME COMPLETE";
+            EnsurePlayAgainButtonOnLevelCompletePanel();
+        }
+        else
+            leveCompletePanelTitle.text = "LEVEL COMPLETE";
+
+        if (levelCompleteCoins != null)
+            levelCompleteCoins.text = "COINS COLLECTED: " + coinCount.ToString() + " / " + totalCoins.ToString();
+        if (levelCompleteTime != null)
+            levelCompleteTime.text = "TIME: " + string.Format("{0:00}:{1:00}", minutes, seconds) + " / " + string.Format("{0:00}:{1:00}", Mathf.FloorToInt(levelTime / 60f), Mathf.FloorToInt(levelTime % 60f));
+
+        ApplyLevelExitPanelLayout(sceneIndex);
 
         SkyRealmUIManager.instance.fadeFromBlack = true;
+
+        StartCoroutine(AdvanceAfterLevelCompleteIfNeeded());
+    }
+
+    /// <summary>
+    /// Keep stats vertically centered as a block (not hugging the top); stack buttons from the bottom so nothing overlaps.
+    /// </summary>
+    private void ApplyLevelExitPanelLayout(int sceneIndex)
+    {
+        if (levelCompletePanel == null)
+            return;
+        Transform panel = levelCompletePanel.transform;
+
+        if (leveCompletePanelTitle != null)
+        {
+            RectTransform rt = leveCompletePanelTitle.rectTransform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = new Vector2(0, 118f);
+            rt.sizeDelta = new Vector2(1100f, 200f);
+        }
+
+        if (levelCompleteCoins != null)
+        {
+            RectTransform rt = levelCompleteCoins.rectTransform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = new Vector2(0, 18f);
+            rt.sizeDelta = new Vector2(1000f, 80f);
+            levelCompleteCoins.enableAutoSizing = false;
+            levelCompleteCoins.fontSize = 40;
+            levelCompleteCoins.raycastTarget = false;
+        }
+
+        if (levelCompleteTime != null)
+        {
+            RectTransform rt = levelCompleteTime.rectTransform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = new Vector2(0, -52f);
+            rt.sizeDelta = new Vector2(1000f, 64f);
+            levelCompleteTime.enableAutoSizing = false;
+            levelCompleteTime.fontSize = 34;
+            levelCompleteTime.raycastTarget = false;
+        }
+
+        if (sceneIndex == 2)
+        {
+            SetBottomAnchoredButtonY(panel, "PlayAgainButton", 95f);
+            SetBottomAnchoredButtonY(panel, "QuitButton", 205f);
+            SetBottomAnchoredButtonY(panel, "MenuButton", 318f);
+            StylePlayAgainButtonLabel(panel);
+        }
+        else
+        {
+            SetBottomAnchoredButtonY(panel, "QuitButton", 155f);
+            SetBottomAnchoredButtonY(panel, "MenuButton", 275f);
+        }
+    }
+
+    private static void StylePlayAgainButtonLabel(Transform panel)
+    {
+        Transform playAgain = panel.Find("PlayAgainButton");
+        if (playAgain == null)
+            return;
+        TextMeshProUGUI tmp = playAgain.GetComponentInChildren<TextMeshProUGUI>();
+        if (tmp == null)
+            return;
+        tmp.fontSize = 60;
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.color = new Color(0.19607843f, 0.19607843f, 0.19607843f, 1f);
+    }
+
+    private static void SetBottomAnchoredButtonY(Transform panel, string childName, float yFromBottom)
+    {
+        Transform t = panel.Find(childName);
+        if (t == null)
+            return;
+        if (t is not RectTransform rt)
+            return;
+        rt.anchorMin = new Vector2(0.5f, 0f);
+        rt.anchorMax = new Vector2(0.5f, 0f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = new Vector2(0, yFromBottom);
+    }
+
+    private void EnsurePlayAgainButtonOnLevelCompletePanel()
+    {
+        if (levelCompletePanel == null)
+            return;
+        Transform panel = levelCompletePanel.transform;
+        if (panel.Find("PlayAgainButton") != null)
+            return;
+
+        TMP_Text styleFrom = levelCompleteCoins != null ? levelCompleteCoins : leveCompletePanelTitle;
+
+        GameObject btnObj = new GameObject("PlayAgainButton");
+        btnObj.transform.SetParent(panel, false);
+
+        RectTransform btnRt = btnObj.AddComponent<RectTransform>();
+        btnRt.anchorMin = new Vector2(0.5f, 0f);
+        btnRt.anchorMax = new Vector2(0.5f, 0f);
+        btnRt.pivot = new Vector2(0.5f, 0.5f);
+        btnRt.anchoredPosition = new Vector2(0, 95f);
+        btnRt.sizeDelta = new Vector2(450, 90);
+
+        Image btnImage = btnObj.AddComponent<Image>();
+        btnImage.color = Color.white;
+        Transform menuRef = panel.Find("MenuButton");
+        if (menuRef != null)
+        {
+            Image refImg = menuRef.GetComponent<Image>();
+            if (refImg != null && refImg.sprite != null)
+            {
+                btnImage.sprite = refImg.sprite;
+                btnImage.type = refImg.type;
+            }
+        }
+
+        Button btn = btnObj.AddComponent<Button>();
+        ColorBlock colors = btn.colors;
+        colors.highlightedColor = new Color(0.96f, 0.96f, 0.96f, 1f);
+        colors.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
+        btn.colors = colors;
+
+        Events events = FindFirstObjectByType<Events>();
+        if (events != null)
+            btn.onClick.AddListener(events.PlayAgain);
+        else
+            btn.onClick.AddListener(() =>
+            {
+                SkyHeartManager.ResetHealth();
+                SceneManager.LoadScene(1);
+            });
+
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(btnObj.transform, false);
+        TextMeshProUGUI btnText = textObj.AddComponent<TextMeshProUGUI>();
+        btnText.text = "PLAY AGAIN";
+        btnText.fontSize = 60;
+        btnText.fontStyle = FontStyles.Bold;
+        btnText.alignment = TextAlignmentOptions.Center;
+        if (styleFrom != null)
+            btnText.font = styleFrom.font;
+        btnText.color = new Color(0.19607843f, 0.19607843f, 0.19607843f, 1f);
+        btnText.raycastTarget = false;
+
+        RectTransform textRt = btnText.rectTransform;
+        textRt.anchorMin = Vector2.zero;
+        textRt.anchorMax = Vector2.one;
+        textRt.offsetMin = Vector2.zero;
+        textRt.offsetMax = Vector2.zero;
+    }
+
+    /// <summary>
+    /// Build order: 0 Menu, 1 Level, 2 Level 2. After Level 1, load Level 2 automatically.
+    /// </summary>
+    private IEnumerator AdvanceAfterLevelCompleteIfNeeded()
+    {
+        yield return new WaitForSeconds(3f);
+        if (!levelComplete)
+            yield break;
+        int index = SceneManager.GetActiveScene().buildIndex;
+        if (index == 1)
+            SceneManager.LoadScene(2);
     }
    
     private IEnumerator RestartLevel()

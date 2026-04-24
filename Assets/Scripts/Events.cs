@@ -25,6 +25,14 @@ public class Events : MonoBehaviour
     {
         SceneManager.LoadScene(1);
     }
+
+    /// <summary>From game-complete screen: restart from Level 1.</summary>
+    public void PlayAgain()
+    {
+        SkyHeartManager.ResetHealth();
+        SceneManager.LoadScene(1);
+    }
+
     public void Quit()
     {
         Application.Quit();
