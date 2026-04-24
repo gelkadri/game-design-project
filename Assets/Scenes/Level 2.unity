@@ -6976,6 +6976,13 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   groundCheck: {fileID: 93182928}
+  lethalContactLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  lethalTiles:
+  - {fileID: 11400000, guid: 50296ac8e23ad194599e4c964a7f0f49, type: 2}
+  lethalTileSpriteNameContains: []
+  additionalKillTag: 
   explorerAnimator: {fileID: 1382118089}
   travelMode: 1
   isPaused: 0

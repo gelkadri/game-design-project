@@ -1,9 +1,11 @@
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
+using UnityEngine.Tilemaps;
 
 public enum SkyTravelMode { mobile, pc }
 
@@ -16,6 +18,19 @@ public class SkyExplorerController : MonoBehaviour
     public float doubleJumpForce = 8f;
     public LayerMask groundLayer;
     public Transform groundCheck;
+
+    [Header("Hazards (same as KillZone — lose a life + restart level)")]
+    [Tooltip("If the blue water lives on its own Tilemap set to the \"Water\" layer, assign that layer here. Leave \"Nothing\" if you only use tiles / tags below.")]
+    [SerializeField] private LayerMask lethalContactLayers;
+
+    [Tooltip("Drag the water / hazard tiles from the Project (the same assets used on your Tilemap). Works when water shares a Tilemap with safe ground.")]
+    [SerializeField] private TileBase[] lethalTiles;
+
+    [Tooltip("Optional: kill when the touched tile’s sprite name contains one of these (case-insensitive), e.g. \"water\" or \"ocean\". Leave empty if unused.")]
+    [SerializeField] private string[] lethalTileSpriteNameContains;
+
+    [Tooltip("Optional extra tag on colliders that should kill (e.g. create tag \"water\" and put it on a trigger volume). Leave blank to ignore.")]
+    [SerializeField] private string additionalKillTag = "";
 
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
@@ -194,13 +209,161 @@ public void SetAnimations()
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(collision.gameObject.tag == "killzone")
+        TryHandleHazardCollision(collision);
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        TryHandleHazardCollision(collision);
+    }
+
+    private void TryHandleHazardCollision(Collision2D collision)
+    {
+        if (SkyRealmGameManager.instance == null)
+            return;
+
+        if (collision.gameObject.CompareTag("killzone"))
         {
             SkyRealmGameManager.instance.Death();
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(additionalKillTag) && collision.gameObject.CompareTag(additionalKillTag))
+        {
+            SkyRealmGameManager.instance.Death();
+            return;
+        }
+
+        int layerBit = 1 << collision.gameObject.layer;
+        if (lethalContactLayers.value != 0 && (lethalContactLayers.value & layerBit) != 0)
+        {
+            SkyRealmGameManager.instance.Death();
+            return;
+        }
+
+        TryDeathFromLethalTilemap(collision);
+    }
+
+    private void TryDeathFromLethalTilemap(Collision2D collision)
+    {
+        if (SkyRealmGameManager.instance == null)
+            return;
+
+        bool useTileRefs = lethalTiles != null && lethalTiles.Length > 0;
+        bool useNameHints = lethalTileSpriteNameContains != null && lethalTileSpriteNameContains.Length > 0;
+        if (!useTileRefs && !useNameHints)
+            return;
+
+        Tilemap tm = collision.collider.GetComponent<Tilemap>() ?? collision.collider.GetComponentInParent<Tilemap>();
+        if (tm == null)
+            return;
+
+        // Contact points often sit on shared edges → WorldToCell picks the wrong (empty) cell.
+        // Scan all tilemap cells overlapped by the player collider while touching this map.
+        Collider2D playerCol = GetComponent<Collider2D>();
+        if (playerCol != null)
+        {
+            Bounds b = playerCol.bounds;
+            b.Expand(0.1f);
+            if (TryDeathFromCellsInWorldBounds(tm, b, useTileRefs, useNameHints))
+                return;
+        }
+
+        if (collision.contactCount > 0)
+        {
+            for (int i = 0; i < collision.contactCount; i++)
+            {
+                ContactPoint2D c = collision.GetContact(i);
+                Vector2 biased = c.point - c.normal * 0.12f;
+                if (TryDeathFromCellsNearWorldPoint(tm, biased, useTileRefs, useNameHints))
+                    return;
+            }
+        }
+        else
+        {
+            Vector2 probe = collision.collider.ClosestPoint(transform.position);
+            if (TryDeathFromCellsNearWorldPoint(tm, probe, useTileRefs, useNameHints))
+                return;
         }
     }
-    
 
+    private bool TryDeathFromCellsInWorldBounds(Tilemap tm, Bounds worldBounds, bool useTileRefs, bool useNameHints)
+    {
+        Vector3Int min = tm.WorldToCell(worldBounds.min);
+        Vector3Int max = tm.WorldToCell(worldBounds.max);
+        int minX = Mathf.Min(min.x, max.x);
+        int maxX = Mathf.Max(min.x, max.x);
+        int minY = Mathf.Min(min.y, max.y);
+        int maxY = Mathf.Max(min.y, max.y);
+
+        for (int x = minX; x <= maxX; x++)
+        {
+            for (int y = minY; y <= maxY; y++)
+            {
+                if (IsLethalCell(tm, new Vector3Int(x, y, 0), useTileRefs, useNameHints))
+                {
+                    SkyRealmGameManager.instance.Death();
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool TryDeathFromCellsNearWorldPoint(Tilemap tm, Vector2 worldPoint, bool useTileRefs, bool useNameHints)
+    {
+        Vector3Int center = tm.WorldToCell(worldPoint);
+        for (int dy = -1; dy <= 1; dy++)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                if (IsLethalCell(tm, center + new Vector3Int(dx, dy, 0), useTileRefs, useNameHints))
+                {
+                    SkyRealmGameManager.instance.Death();
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsLethalCell(Tilemap tm, Vector3Int cell, bool useTileRefs, bool useNameHints)
+    {
+        TileBase tile = tm.GetTile(cell);
+        if (tile == null)
+            return false;
+
+        if (useTileRefs)
+        {
+            foreach (TileBase hazard in lethalTiles)
+            {
+                if (hazard == null)
+                    continue;
+                if (ReferenceEquals(tile, hazard) || string.Equals(tile.name, hazard.name, StringComparison.Ordinal))
+                    return true;
+            }
+        }
+
+        if (useNameHints)
+        {
+            Sprite spr = tm.GetSprite(cell);
+            if (spr != null)
+            {
+                string spriteName = spr.name;
+                foreach (string hint in lethalTileSpriteNameContains)
+                {
+                    if (string.IsNullOrEmpty(hint))
+                        continue;
+                    if (spriteName.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0)
+                        return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     //mobile;
     public void MobileMove(float value)
